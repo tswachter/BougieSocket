@@ -40,6 +40,10 @@ public sealed class OneDriver : IAsyncDisposable
     public bool IsOpen => _socket.State == WebSocketState.Open;
 
     public event Action<OneDriver>? Closed;
+    public event Action<Uri>? Handoff;
+
+    public ValueTask SendHandoffAsync(Uri endpoint) =>
+        _outbound.Writer.WriteAsync(Wire.EncodeHandoff(endpoint));
 
     public void Start()
     {
@@ -192,6 +196,11 @@ public sealed class OneDriver : IAsyncDisposable
         if (envelope is null || envelope.NobleNet != Protocol.Version)
             return;
 
+        if (envelope.Mtype == Protocol.Handoff && Uri.TryCreate(envelope.Endpoint, UriKind.Absolute, out var next))
+        {
+            Handoff?.Invoke(next);
+            return;
+        }
         if (envelope.Mtype == Protocol.Reply)
         {
             Complete(envelope);

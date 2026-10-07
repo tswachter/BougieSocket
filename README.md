@@ -11,6 +11,7 @@ NobleNet (Natick, 1992–1996) multiplexed every API for a client onto one conne
 - Either side registers programs. The demo server shouts by calling a procedure the client exported, on the socket the client opened.
 - `SessionHub` does not listen. Kestrel accepts the upgrade and hands the `WebSocket` to the hub. The protocol library has no ASP.NET dependency.
 - Auth is an `Authenticator` returning `AuthDecision.Allow` or `Deny`. A denial is `auth_error`, not an HTTP status.
+- A primary move is a `handoff` frame, not a shout to the old address. `SessionHub.MoveToAsync` tells every open session the new WebSocket URL and closes them. `FollowingClient` reconnects and exports the same programs on the new socket. A drop with no handoff retries the last URL. Updates published in the gap are still gone.
 
 Accept codes match the ONC reply status: `success`, `prog_unavail`, `prog_mismatch`, `proc_unavail`, `garbage_args`, `system_err`.
 

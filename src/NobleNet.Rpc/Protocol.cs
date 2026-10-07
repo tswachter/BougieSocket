@@ -13,6 +13,7 @@ public static class Protocol
 
     public const string Call = "call";
     public const string Reply = "reply";
+    public const string Handoff = "handoff";
 
     public const string Accepted = "accepted";
     public const string Denied = "denied";

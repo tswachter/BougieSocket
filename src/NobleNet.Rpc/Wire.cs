@@ -35,6 +35,7 @@ internal sealed class WireEnvelope
     [JsonPropertyName("mismatch")] public WireSpan? Mismatch { get; set; }
     [JsonPropertyName("result")] public JsonElement Result { get; set; }
     [JsonPropertyName("error")] public string? Error { get; set; }
+    [JsonPropertyName("endpoint")] public string? Endpoint { get; set; }
 }
 
 internal sealed class WireCred
@@ -77,6 +78,20 @@ internal static class Wire
                 WriteElement(writer, element);
             else
                 JsonSerializer.Serialize(writer, args, args.GetType(), Json.Options);
+            writer.WriteEndObject();
+        }
+        return buffer.ToArray();
+    }
+
+    public static byte[] EncodeHandoff(Uri endpoint)
+    {
+        using var buffer = new MemoryStream();
+        using (var writer = new Utf8JsonWriter(buffer))
+        {
+            writer.WriteStartObject();
+            writer.WriteNumber("noblenet", Protocol.Version);
+            writer.WriteString("mtype", Protocol.Handoff);
+            writer.WriteString("endpoint", endpoint.ToString());
             writer.WriteEndObject();
         }
         return buffer.ToArray();

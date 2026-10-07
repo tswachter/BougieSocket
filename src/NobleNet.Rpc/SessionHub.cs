@@ -66,4 +66,28 @@ public sealed class SessionHub
         SessionOpened?.Invoke(this, new SessionEventArgs(session));
         return session;
     }
+
+    /// <summary>
+    /// Tell every open session the new primary, then close them. Shouts after
+    /// this reach nobody on this process. Clients that follow the handoff
+    /// reconnect and export their programs again.
+    /// </summary>
+    public async Task MoveToAsync(Uri successor, CancellationToken cancellationToken = default)
+    {
+        var open = Sessions.Where(s => s.IsOpen).ToArray();
+        foreach (var session in open)
+        {
+            try
+            {
+                await session.SendHandoffAsync(successor).ConfigureAwait(false);
+            }
+            catch (Exception)
+            {
+                // already gone; the client will have to retry its last address
+            }
+        }
+        await Task.Delay(50, cancellationToken).ConfigureAwait(false);
+        foreach (var session in open)
+            await session.DisposeAsync().ConfigureAwait(false);
+    }
 }
